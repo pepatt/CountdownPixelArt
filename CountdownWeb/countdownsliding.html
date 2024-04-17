@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            overflow-y: hidden;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            width: 100%;
+            height: 100vh;
+            background-color: blanchedalmond;
+        }
+
+        .countdown {
+            background-color: rgb(255, 223, 175);
+            padding: 100px;
+            font-size: 300%;
+            border-style: solid;
+            border-color: orange;
+            border-width: 5px;
+            border-radius: 5px;
+            width: 200px;
+            height: 100px;
+        }
+
+        .candleOut {
+            position: absolute;
+            z-index: 1;
+            display: none;
+        }
+        
+        .candleTop {
+            position: absolute;
+            z-index: -2;
+            top: 230px;
+        }/*topbound = 230px bottom bound = 570px range = 340 */
+        
+        .candleCover {
+            position: absolute;
+            z-index: -1;
+            background-color: blanchedalmond;
+            color: blanchedalmond;
+            height: 500px;
+            width: 50px;
+            bottom: -187px; 
+        }
+
+        .waterFiller {
+            position: absolute;
+            z-index: 1;
+            top: 230px;
+        }/*topbound = 230px bottom bound = 670px range = 440*/
+
+        .waterCover{
+            position: absolute;
+            z-index: 2;
+            background-color: blanchedalmond;
+            color: blanchedalmond;
+            height: 500px;
+            width: 50px;
+            bottom: -247px; 
+        } 
+
+        .waterEmpty {
+            z-index: 4;
+        }
+
+        .waterBot {
+            position: absolute;
+            z-index: 3;
+        }
+
+        .shownCountdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .inputBox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px
+        }
+
+        .hours {
+            background-color: rgb(252, 207, 121);
+            border-style: solid;
+            border-width: 2px;
+            border-color: orange;
+            border-radius: 5px;
+            width: 40px;
+        }
+
+        .minutes {
+            background-color: rgb(252, 207, 121);
+            border-style: solid;
+            border-width: 2px;
+            border-color: orange;
+            border-radius: 5px;
+            width: 40px;
+        }
+
+        .seconds {
+            background-color: rgb(252, 207, 121);
+            border-style: solid;
+            border-width: 2px;
+            border-color: orange;
+            border-radius: 5px;
+            width: 40px;
+        }
+
+        .buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .startButton {
+            margin: 10px;
+            background-color: rgb(252, 207, 121);
+            border-style: solid;
+            border-width: 2px;
+            border-color: orange;
+            border-radius: 5px;
+        }
+        .skipButton {
+            margin: 10px;
+            display: none;
+            background-color: rgb(252, 207, 121);
+            border-style: solid;
+            border-width: 2px;
+            border-color: orange;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="candle">
+        <div class="candle__image">
+            <img class = candleOut id ="candleOut" height="500px" src = "flameOut.png" alt="Flame should be out here">
+            <img class="candleTop" id="candleTop" height="500px" src ="flametop.png" alt="There should be a candle here">
+            <div class="candleCover">1</div>
+            <img height="500px" src ="flamebottom.png" alt="There should be a candle here">
+        </div>
+    </div>
+    <div class="countdown">
+        <div class="shownCountdown" id="timer">Timer</div>
+        
+        <div class="inputBox">
+            <input class="hours" id="hoursinput" type="number" min="0" step="1" value="0">
+            <input class="minutes" id="minutesinput" type="number" min="0" step="1" value="0">
+            <input class="seconds" id="secondsinput" type="number" min="0" step="1" value="0">
+        </div>
+
+        <div class="buttons">
+            <button class="startButton" id="button" onclick="toggle()">Start</button>
+            <button class="skipButton" id="skip" onclick="skipTimer()">Skip</button>
+        </div>
+    </div>
+    <div class="water">
+        <div class="water__image">
+            <img id= "waterFiller" class="waterFiller" height="500px" src="waterSlide.png" alt="watersliding should be here">
+            <img class="waterBot" height="500px" src="waterBot.png" alt="waterBottom should be here">
+            <div class="waterCover">1</div>
+            <img class="waterEmpty" height="500" src="waterEmpty.png" alt="Empty glass should be here">
+        </div>
+    </div>
+    <script>
+
+        let state = 0;
+        let interval;
+        let tempTimeToCountdown;
+        let candleYIndex;
+        let spotsPerSecond;
+        let waterYIndex;
+        let evapGap;
+
+        function toggle() {
+            if(state == 0) {
+                state = 1;
+                startTimer();
+                document.getElementById('button').textContent = `Pause`;
+                document.getElementById('skip').style.display = "inline";
+            } else if(state == 1) {
+                state = 2;
+                pauseTimer();
+                document.getElementById('button').textContent = `Resume`;
+                document.getElementById('skip').style.display = "none";
+
+            } else if(state == 2) {
+                state = 1;
+                resumeTimer();
+                document.getElementById('button').textContent = `Pause`;
+                document.getElementById('skip').style.display = "inline";
+            }
+        } 
+
+        function resumeTimer() {
+            startCountdown(); 
+        }
+        
+        function pauseTimer() {
+            clearInterval(interval);
+        }
+
+        function skipTimer() {
+            state = 0;
+            clearInterval(interval);
+            document.getElementById('button').textContent = `Start`;
+            document.getElementById('timer').textContent = `Timer`;
+            document.getElementById('skip').style.display = "none";
+        }
+
+        function resetTimer() {
+            state = 0;
+            document.getElementById('button').textContent = `Start`;
+            document.getElementById('timer').textContent = `Timer`;
+            document.getElementById('skip').style.display = "none";
+        }
+
+        function formatOutcome(t) {
+            let outcomeSeconds = Math.floor(t / 1000);
+            let outcomeHours = Math.floor(t / (60 * 60 * 1000));
+            outcomeSeconds %= 3600;
+            let outcomeMinutes = Math.floor(t / (60 * 1000));
+            outcomeMinutes %= 60;
+            outcomeSeconds %= 60;
+            
+            outcomeSeconds = outcomeSeconds.toString().padStart(2,'0');
+            outcomeMinutes = outcomeMinutes.toString().padStart(2,'0');
+            outcomeHours = outcomeHours.toString().padStart(2,'0');
+            
+            document.getElementById('timer').textContent = `${outcomeHours}:${outcomeMinutes}:${outcomeSeconds}`;
+        }
+
+        function startTimer() {
+
+            candleYIndex = 230;
+            spotsPerSecond = 0;
+
+            waterYIndex = 230;
+            evapGap = 0;
+
+            const hoursinput = document.getElementById('hoursinput');
+            const minutesinput = document.getElementById('minutesinput');
+            const secondsinput = document.getElementById('secondsinput');
+            const hoursMS = Math.floor(hoursinput.value * 60 * 60 * 1000);
+            const minutesMS = Math.floor(minutesinput.value * 60 * 1000);
+            const secondsMS = Math.floor(secondsinput.value * 1000);
+
+            const timeToCountdown = hoursMS + minutesMS + secondsMS;
+            tempTimeToCountdown = timeToCountdown + 1000;
+
+            spotsPerSecond = 340 / (tempTimeToCountdown / 1000); 
+            evapGap = 440 / (tempTimeToCountdown / 1000);
+
+            startCountdown();
+        }
+        function startCountdown() {
+            interval = setInterval(function() {
+                waterYIndex = waterYIndex + evapGap;
+                document.getElementById('waterFiller').style.top = (waterYIndex) + 'px';
+                /*above is the water level change*/
+                candleYIndex = candleYIndex + spotsPerSecond;
+                document.getElementById('candleTop').style.top = (candleYIndex) + 'px';
+                //candle cosmetics below
+                document.getElementById('candleTop').style.display = "inline";
+                document.getElementById('candleOut').style.display = "none";
+                /* above is the visual work on the candle y-axis movement*/
+                /* below is the practical countdown clock mechanism */
+                tempTimeToCountdown -= 1000;
+                const outcomeTime = tempTimeToCountdown;
+
+                if (outcomeTime <= 0) {
+                    clearInterval(interval);
+                    document.getElementById('timer').textContent = 'Timer ended';
+                    /*cosmetic for candle below*/
+                    document.getElementById('candleTop').style.display = "none";
+                    document.getElementById('candleOut').style.display = "inline";
+                    //practical below
+                    resetTimer();
+                } else {
+                    formatOutcome(outcomeTime);
+                }
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>
