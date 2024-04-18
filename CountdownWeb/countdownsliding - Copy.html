@@ -14,7 +14,6 @@
         }
 
         .countdown {
-            width: 100% / 3;
             background-color: rgb(255, 223, 175);
             padding: 100px;
             font-size: 300%;
@@ -22,13 +21,26 @@
             border-color: orange;
             border-width: 5px;
             border-radius: 5px;
+            width: 200px;
+            height: 100px;
+        }
+
+        .candle {
+            overflow-y: hidden;
+            position: relative;
+        }
+
+        .candleOut {
+            position: absolute;
+            z-index: 1;
+            display: none;
         }
         
-        .candletop {
+        .candleTop {
             position: absolute;
             z-index: -2;
-            top: 230px;
-        }
+            top: 0px;
+        }/*range = 340 */
         
         .candleCover {
             position: absolute;
@@ -37,15 +49,52 @@
             color: blanchedalmond;
             height: 500px;
             width: 50px;
-            bottom: -187px; 
+            top: 420px; 
         }
-        
+
+        .water {
+            overflow-y: hidden;
+            position: relative;
+        }
+
+        .waterFiller {
+            position: absolute;
+            z-index: 1;
+            top: 0px;
+        }/*range = 440*/
+
+        .waterCover{
+            position: absolute;
+            z-index: 2;
+            background-color: blanchedalmond;
+            color: blanchedalmond;
+            height: 500px;
+            width: 50px;
+            top: 480px; 
+        } 
+
+        .waterEmpty {
+            z-index: 4;
+        }
+
+        .waterBot {
+            position: absolute;
+            z-index: 3;
+        }
+
         .shownCountdown {
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        .inputBox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px
+        }
 
         .hours {
             background-color: rgb(252, 207, 121);
@@ -53,6 +102,7 @@
             border-width: 2px;
             border-color: orange;
             border-radius: 5px;
+            width: 40px;
         }
 
         .minutes {
@@ -61,6 +111,7 @@
             border-width: 2px;
             border-color: orange;
             border-radius: 5px;
+            width: 40px;
         }
 
         .seconds {
@@ -69,6 +120,7 @@
             border-width: 2px;
             border-color: orange;
             border-radius: 5px;
+            width: 40px;
         }
 
         .buttons {
@@ -97,14 +149,13 @@
 </head>
 <body>
     <div class="candle">
-        <div class="candle__image">
-            <img class="candletop" id="candletop" height="500px" src ="flametop.png" alt="There should be a candle here">
-            <div class="candleCover">1</div>
-            <img height="500px" src ="flamebottom.png" alt="There should be a candle here">
-        </div>
+        <img class = candleOut id ="candleOut" height="500px" src = "flameOut.png" alt="Flame should be out here">
+        <img class="candleTop" id="candleTop" height="500px" src ="flametop.png" alt="There should be a candle here">
+        <div class="candleCover">1</div>
+        <img height="500px" src ="flamebottom.png" alt="There should be a candle here">
     </div>
     <div class="countdown">
-        <div class="shownCountdown" id="timer">Set time and click Start</div>
+        <div class="shownCountdown" id="timer">Timer</div>
         
         <div class="inputBox">
             <input class="hours" id="hoursinput" type="number" min="0" step="1" value="0">
@@ -118,15 +169,22 @@
         </div>
     </div>
     <div class="water">
-        <div class="water__image">
-            <img height="500px" src="water.png" alt="There should be water here">
-        </div>
+        <img id= "waterFiller" class="waterFiller" height="500px" src="waterSlide.png" alt="watersliding should be here">
+        <img class="waterBot" height="500px" src="waterBot.png" alt="waterBottom should be here">
+        <div class="waterCover">1</div>
+        <img class="waterEmpty" height="500" src="waterEmpty.png" alt="Empty glass should be here">
     </div>
     <script>
 
         let state = 0;
         let interval;
         let tempTimeToCountdown;
+        let candleYIndex;
+        let spotsPerSecond;
+        let waterYIndex;
+        let evapGap;
+        let startTime;
+
 
         function toggle() {
             if(state == 0) {
@@ -160,7 +218,14 @@
             state = 0;
             clearInterval(interval);
             document.getElementById('button').textContent = `Start`;
-            document.getElementById('timer').textContent = `Set time and click Start`;
+            document.getElementById('timer').textContent = `Timer`;
+            document.getElementById('skip').style.display = "none";
+        }
+
+        function resetTimer() {
+            state = 0;
+            document.getElementById('button').textContent = `Start`;
+            document.getElementById('timer').textContent = `Timer`;
             document.getElementById('skip').style.display = "none";
         }
 
@@ -180,6 +245,15 @@
         }
 
         function startTimer() {
+
+            candleYIndex = 0;
+            spotsPerSecond = 0;
+
+            waterYIndex = 0;
+            evapGap = 0;
+
+            startTime = new Date().getTime();
+
             const hoursinput = document.getElementById('hoursinput');
             const minutesinput = document.getElementById('minutesinput');
             const secondsinput = document.getElementById('secondsinput');
@@ -190,16 +264,36 @@
             const timeToCountdown = hoursMS + minutesMS + secondsMS;
             tempTimeToCountdown = timeToCountdown + 1000;
 
+            spotsPerSecond = 340 / (tempTimeToCountdown / 1000); 
+            evapGap = 440 / (tempTimeToCountdown / 1000);
+
             startCountdown();
         }
         function startCountdown() {
             interval = setInterval(function() {
-                tempTimeToCountdown -= 1000;
-                const outcomeTime = tempTimeToCountdown;
+                
+                /* below is the practical countdown clock mechanism */
+                const currentTime = new Date().getTime();
+                const outcomeTime = (startTime + tempTimeToCountdown) - currentTime;
+                
+                waterYIndex = (evapGap * ((currentTime - startTime) / 1000));
+                document.getElementById('waterFiller').style.top = (waterYIndex) + 'px';
+                /*above is the water level change*/
+                candleYIndex = (spotsPerSecond * ((currentTime - startTime) / 1000));
+                document.getElementById('candleTop').style.top = (candleYIndex) + 'px';
+                //candle cosmetics below
+                document.getElementById('candleTop').style.display = "inline";
+                document.getElementById('candleOut').style.display = "none";
+                /* above is the visual work on the candle y-axis movement*/
 
                 if (outcomeTime <= 0) {
                     clearInterval(interval);
                     document.getElementById('timer').textContent = 'Timer ended';
+                    /*cosmetic for candle below*/
+                    document.getElementById('candleTop').style.display = "none";
+                    document.getElementById('candleOut').style.display = "inline";
+                    //practical below
+                    resetTimer();
                 } else {
                     formatOutcome(outcomeTime);
                 }
