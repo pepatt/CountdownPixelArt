@@ -26,6 +26,7 @@
         }
 
         .candle {
+            overflow-y: hidden;
             position: relative;
         }
 
@@ -52,6 +53,7 @@
         }
 
         .water {
+            overflow-y: hidden;
             position: relative;
         }
 
@@ -181,6 +183,8 @@
         let spotsPerSecond;
         let waterYIndex;
         let evapGap;
+        let startTime;
+
 
         function toggle() {
             if(state == 0) {
@@ -248,6 +252,8 @@
             waterYIndex = 0;
             evapGap = 0;
 
+            startTime = new Date().getTime();
+
             const hoursinput = document.getElementById('hoursinput');
             const minutesinput = document.getElementById('minutesinput');
             const secondsinput = document.getElementById('secondsinput');
@@ -265,18 +271,20 @@
         }
         function startCountdown() {
             interval = setInterval(function() {
-                waterYIndex = waterYIndex + evapGap;
+                
+                /* below is the practical countdown clock mechanism */
+                const currentTime = new Date().getTime();
+                const outcomeTime = (startTime + tempTimeToCountdown) - currentTime;
+                
+                waterYIndex = (evapGap * ((currentTime - startTime) / 1000));
                 document.getElementById('waterFiller').style.top = (waterYIndex) + 'px';
                 /*above is the water level change*/
-                candleYIndex = candleYIndex + spotsPerSecond;
+                candleYIndex = (spotsPerSecond * ((currentTime - startTime) / 1000));
                 document.getElementById('candleTop').style.top = (candleYIndex) + 'px';
                 //candle cosmetics below
                 document.getElementById('candleTop').style.display = "inline";
                 document.getElementById('candleOut').style.display = "none";
                 /* above is the visual work on the candle y-axis movement*/
-                /* below is the practical countdown clock mechanism */
-                tempTimeToCountdown -= 1000;
-                const outcomeTime = tempTimeToCountdown;
 
                 if (outcomeTime <= 0) {
                     clearInterval(interval);
